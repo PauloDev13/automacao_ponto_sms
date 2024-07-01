@@ -89,6 +89,8 @@ def main():
 
     bot.wait(1000)
 
+    bot.leave_iframe()
+
 
     button_send = bot.find_element('//*[@id="form"]/input', By.XPATH)
     button_send.click()
