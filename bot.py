@@ -44,10 +44,11 @@ from botcity.plugins.excel import BotExcelPlugin
 BotMaestroSDK.RAISE_NOT_CONNECTED = False
 
 excel = BotExcelPlugin()
-# excel.add_row(['DATA ENTRADA', 'ENTRADA', 'TRABALHADA', 'JUSTIFICADA', 'STATUS'])
-excel.add_row(['DATA ENTRADA', 'ENTRADA', 'DATA SAÍDA', 'SAÍDA', 'TRABALHADA', 'JUSTIFICADA', 'STATUS', 'EDITAR'])
+# excel.add_row(['DATA ENTRADA', 'ENTRADA', 'DATA SAÍDA', 'SAÍDA', 'TRABALHADA', 'JUSTIFICADA', 'STATUS'])
+
 cpf = input('Digite o CPF (ex: 123.456.789-00): ')
-mes = input('Digite o Mes (ex: 02, 03, 04, 05...): ')
+month_start = input('Digite o Mês de início(ex: 1, 2, 3, 10, 11...): ')
+month_end = input('Digite o Mês de final(ex: 1, 2, 3, 10, 11...): ')
 ano = input('Digite o Ano (ex: 2024): ')
 
 def main():
@@ -69,82 +70,116 @@ def main():
     # Uncomment to set the WebDriver path
     # bot.driver_path = "<path to your WebDriver binary>"
 
-    # Opens the BotCity website.
-    bot.browse("https://natal.rn.gov.br/sms/ponto/index.php")
+    # Acessa a URL do sistema de ponto.
+    bot.browse('https://natal.rn.gov.br/sms/ponto/index.php')
 
-    # Implement here your logic...
+    # Pausa de 1 segundo
     bot.wait(1000)
 
+    # busca o campo de login, clica nele e digita o login
     input_user = bot.find_element('//*[@id="cpf"]', By.XPATH)
     input_user.click()
-    input_user.send_keys('06543548479')
+    input_user.send_keys('')
 
+    # Pressiona a tecla TAB
     input_user.send_keys(Keys.TAB)
-    #
+
+    # No campo senha, digita a senha
     input_password = bot.find_element('//*[@id="senha"]', By.XPATH)
-    # input_password.click()
-    input_password.send_keys('pgm2024')
+    input_password.send_keys('')
 
+    # Acessa o IFrame onde está o captcha, clica nele e depois sai do IFrame
     bot.enter_iframe(0)
-
-    bot.wait(1000)
-
     captcha = bot.find_element('//*[@id="recaptcha-anchor"]', By.XPATH)
     captcha.click()
-
-    bot.wait(10000)
-
     bot.leave_iframe()
 
+    # Pausa de 30 segundos
+    bot.wait(30000)
+
+    # Vai para o botão de logar e clica
     button_send = bot.find_element('//*[@id="form"]/input', By.XPATH)
     button_send.click()
 
+    # Pausa de 1 segundo
     bot.wait(1000)
 
-    bot.navigate_to(
-        f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={mes}&ano={ano}')
+    # Define uma variável que vai receber o nome registrado no ponto
+    str_name_employe = ''
 
-    bot.wait(1000)
+    # Inicia um laço usando o intervalo dos meses informados
+    for month in range(int(month_start), int(month_end) + 1):
+        # Pausa de 2 segundos
+        bot.wait(2000)
 
-    data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
-    data = table_to_dict(data_table)
+        # Monta a URL com o CPF, Mês e Ano para acessar os dados do ponto para cada mês
+        bot.navigate_to(
+            f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={ano}')
 
+        # Se a variável str_name_employe estiver vazia, acessa o elemento do DOM que tem o nome do servidor
+        if not str_name_employe:
+            str_name_employe = bot.find_element(
+                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH)
+
+        # Acessa a tabela com os dados do ponto e transforma num array de dicionários
+        data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
+        data = table_to_dict(data_table)
+
+        # Imprime os dados obtidos na tabela
+        print(data)
+
+        # Adiciona uma linha ao arquivo do Excel que seria criado com o mês e o ano pesquisados
+        excel.add_row([f'MÊS: 0{month} - ANO: {ano}'])
+
+        # Adiciona uma nova linha com o cabeçalho das colunas
+        excel.add_row(
+            [
+                'DATA ENTRADA',
+                'ENTRADA',
+                'DATA SAÍDA',
+                'SAÍDA',
+                'TRABALHADA',
+                'JUSTIFICADA',
+                'STATUS'
+            ]
+        )
+
+        # Faz um loop nos dados obtidos na tabela de ponto
+        for item in data:
+
+            # Pausa de 1 segundo e 7 décimos
+            bot.wait(1700)
+
+            # Acessa cada chave do dicionário montado anteriormente
+            str_data_entrada = item['data_entrada']
+            str_entrada = item['entrada']
+            str_data_saida = item['data_saída']
+            str_saida = item['saída']
+            str_trabalhada = item['trabalhada']
+            str_hora_justificada = item['hora_justificada']
+            str_status = item['status']
+
+            # Adciona nova linha no arquivo do Excel a cada interação com os dados obtidos no dicionário
+            excel.add_row(
+                [
+                    str_data_entrada,
+                    str_entrada,
+                    str_data_saida,
+                    str_saida,
+                    str_trabalhada,
+                    str_hora_justificada,
+                    str_status
+                ]
+            )
+
+    # Cria o arquivo do Excel e salva no diretório com o nome do servidor + o ano da pesquisa
+    excel.write(fr'C:\Users\paulo.morais\Desktop\BOT\{str_name_employe.tex}-{ano}.xlsx')
+
+    # Espera 3 secundos antes de fechar o browser
     bot.wait(3000)
 
-    print(data)
 
-    for item in data:
-        excel.add_row(item.values())
-        str_data_entrada = item['data_entrada']
-        print(str_data_entrada)
-        str_entrada = item['entrada']
-        print(str_entrada)
-            # str_data_saida = item['data_saída']
-            # print(str_data_saida)
-            # str_saida = item['saída']
-            # print(str_saida)
-        # str_trabalhada = item['trabalhada']
-        # print(str_trabalhada)
-        str_hora_justificada = item['hora_justificada']
-        print(str_hora_justificada)
-        str_status = item['status']
-        print(str_status)
-
-    # excel.add_row([str_data_entrada,
-    #                 str_entrada,
-    #                 # str_data_saida,
-    #                 # str_saida,
-    #                 str_trabalhada,
-    #                 str_hora_justificada,
-    #                 str_status]
-    #                       )
-
-    # excel.write(r'C:\Desenvolvimento\_projeto_python\automacao_ponto_sms\Teste.xlsx')
-    # Wait 3 seconds before closing
-    bot.wait(5000)
-    # input()
-
-    # Finish and clean up the Web Browser
+    # Finaliza e limpa o Web Browser
     # You MUST invoke the stop_browser to avoid
     # leaving instances of the webdriver open
     bot.stop_browser()
