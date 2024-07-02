@@ -102,31 +102,13 @@ def main():
     button_send.click()
 
     # Pausa de 1 segundo
-    bot.wait(1000)
+    # bot.wait(1000)
 
     # Define uma variável que vai receber o nome registrado no ponto
     str_name_employe = ''
 
     # Inicia um laço usando o intervalo dos meses informados
     for month in range(int(month_start), int(month_end) + 1):
-        # Pausa de 2 segundos
-        bot.wait(2000)
-
-        # Monta a URL com o CPF, Mês e Ano para acessar os dados do ponto para cada mês
-        bot.navigate_to(
-            f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={ano}')
-
-        # Se a variável str_name_employe estiver vazia, acessa o elemento do DOM que tem o nome do servidor
-        if not str_name_employe:
-            str_name_employe = bot.find_element(
-                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH)
-
-        # Acessa a tabela com os dados do ponto e transforma num array de dicionários
-        data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
-        data = table_to_dict(data_table)
-
-        # Imprime os dados obtidos na tabela
-        print(data)
 
         # Adiciona uma linha ao arquivo do Excel que seria criado com o mês e o ano pesquisados
         excel.add_row([f'MÊS: 0{month} - ANO: {ano}'])
@@ -144,12 +126,28 @@ def main():
             ]
         )
 
+        # Pausa de 2 segundos
+        bot.wait(2000)
+
+        # Monta a URL com o CPF, Mês e Ano para acessar os dados do ponto para cada mês
+        bot.navigate_to(
+            f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={ano}')
+
+        # acessa o elemento do DOM que tem o nome do servidor e atribui a variável str_name_employe
+        str_name_employe = bot.find_element(
+                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH)
+
+        # Acessa a tabela com os dados do ponto e transforma num array de dicionários
+        data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
+        data = table_to_dict(data_table)
+
+        # Imprime os dados obtidos na tabela
+        print(data)
+
+        bot.wait(3000)
+
         # Faz um loop nos dados obtidos na tabela de ponto
         for item in data:
-
-            # Pausa de 1 segundo e 7 décimos
-            bot.wait(1700)
-
             # Acessa cada chave do dicionário montado anteriormente
             str_data_entrada = item['data_entrada']
             str_entrada = item['entrada']
@@ -158,6 +156,8 @@ def main():
             str_trabalhada = item['trabalhada']
             str_hora_justificada = item['hora_justificada']
             str_status = item['status']
+
+            print(str_data_entrada)
 
             # Adciona nova linha no arquivo do Excel a cada interação com os dados obtidos no dicionário
             excel.add_row(
@@ -172,8 +172,11 @@ def main():
                 ]
             )
 
+        excel.add_row([])
+
+
     # Cria o arquivo do Excel e salva no diretório com o nome do servidor + o ano da pesquisa
-    excel.write(fr'C:\Users\paulo.morais\Desktop\BOT\{str_name_employe.tex}-{ano}.xlsx')
+    excel.write(fr'C:\Users\prmorais\Desktop\BOT\{str_name_employe.text}-{ano}.xlsx')
 
     # Espera 3 secundos antes de fechar o browser
     bot.wait(3000)
