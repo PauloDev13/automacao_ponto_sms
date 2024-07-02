@@ -21,7 +21,6 @@ Please refer to the documentation for more information at
 https://documentation.botcity.dev/tutorials/python-automations/web/
 """
 
-
 # Import for the Web Bot
 from botcity.web import WebBot, Browser, By
 
@@ -44,6 +43,12 @@ from botcity.plugins.excel import BotExcelPlugin
 # Disable errors if we are not connected to Maestro
 BotMaestroSDK.RAISE_NOT_CONNECTED = False
 
+excel = BotExcelPlugin()
+# excel.add_row(['DATA ENTRADA', 'ENTRADA', 'TRABALHADA', 'JUSTIFICADA', 'STATUS'])
+excel.add_row(['DATA ENTRADA', 'ENTRADA', 'DATA SAÍDA', 'SAÍDA', 'TRABALHADA', 'JUSTIFICADA', 'STATUS', 'EDITAR'])
+cpf = input('Digite o CPF (ex: 123.456.789-00): ')
+mes = input('Digite o Mes (ex: 02, 03, 04, 05...): ')
+ano = input('Digite o Ano (ex: 2024): ')
 
 def main():
     maestro = BotMaestroSDK.from_sys_args()
@@ -74,10 +79,10 @@ def main():
     input_user.click()
     input_user.send_keys('06543548479')
 
-    # input_user.send_keys(Keys.TAB)
+    input_user.send_keys(Keys.TAB)
     #
     input_password = bot.find_element('//*[@id="senha"]', By.XPATH)
-    input_password.click()
+    # input_password.click()
     input_password.send_keys('pgm2024')
 
     bot.enter_iframe(0)
@@ -87,22 +92,62 @@ def main():
     captcha = bot.find_element('//*[@id="recaptcha-anchor"]', By.XPATH)
     captcha.click()
 
-    bot.wait(1000)
+    bot.wait(10000)
 
     bot.leave_iframe()
-
 
     button_send = bot.find_element('//*[@id="form"]/input', By.XPATH)
     button_send.click()
 
-    # Wait 3 seconds before closing
+    bot.wait(1000)
+
+    bot.navigate_to(
+        f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={mes}&ano={ano}')
+
+    bot.wait(1000)
+
+    data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
+    data = table_to_dict(data_table)
+
     bot.wait(3000)
-    input()
+
+    print(data)
+
+    for item in data:
+        excel.add_row(item.values())
+        str_data_entrada = item['data_entrada']
+        print(str_data_entrada)
+        str_entrada = item['entrada']
+        print(str_entrada)
+            # str_data_saida = item['data_saída']
+            # print(str_data_saida)
+            # str_saida = item['saída']
+            # print(str_saida)
+        # str_trabalhada = item['trabalhada']
+        # print(str_trabalhada)
+        str_hora_justificada = item['hora_justificada']
+        print(str_hora_justificada)
+        str_status = item['status']
+        print(str_status)
+
+    # excel.add_row([str_data_entrada,
+    #                 str_entrada,
+    #                 # str_data_saida,
+    #                 # str_saida,
+    #                 str_trabalhada,
+    #                 str_hora_justificada,
+    #                 str_status]
+    #                       )
+
+    # excel.write(r'C:\Desenvolvimento\_projeto_python\automacao_ponto_sms\Teste.xlsx')
+    # Wait 3 seconds before closing
+    bot.wait(5000)
+    # input()
 
     # Finish and clean up the Web Browser
     # You MUST invoke the stop_browser to avoid
     # leaving instances of the webdriver open
-    # bot.stop_browser()
+    bot.stop_browser()
 
     # Uncomment to mark this task as finished on BotMaestro
     # maestro.finish_task(
