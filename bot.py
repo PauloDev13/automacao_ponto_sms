@@ -76,19 +76,19 @@ def main():
     bot.browse('https://natal.rn.gov.br/sms/ponto/index.php')
 
     # Pausa de 1 segundo
-    bot.wait(1000)
+    # bot.wait(1000)
 
     # busca o campo de login, clica nele e digita o login
     input_user = bot.find_element('//*[@id="cpf"]', By.XPATH)
     input_user.click()
-    input_user.send_keys('06543548479')
+    input_user.send_keys('')
 
     # Pressiona a tecla TAB
     input_user.send_keys(Keys.TAB)
 
     # No campo senha, digita a senha
     input_password = bot.find_element('//*[@id="senha"]', By.XPATH)
-    input_password.send_keys('pgm2024')
+    input_password.send_keys('')
 
     # Acessa o IFrame onde está o captcha, clica nele e depois sai do IFrame
     bot.enter_iframe(0)
@@ -109,17 +109,17 @@ def main():
     for year in range(year_start, year_end + 1):
         if year == year_start:
             print(f'YEAR START: {year}')
-            for month in range(month_start, 13):
+            for var_1 in range(month_start, 13):
                 bot.navigate_to(
-                f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={year}')
+                f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={var_1}&ano={year}')
 
                 data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
                 data = table_to_dict(data_table)
         else:
             print(f'YEAR END: {year}')
-            for month in range(1, month_end + 1):
+            for var_2 in range(1, month_end + 1):
                 bot.navigate_to(
-                    f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={year}')
+                    f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={var_2}&ano={year}')
 
                 data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
                 data = table_to_dict(data_table)
