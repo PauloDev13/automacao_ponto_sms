@@ -47,9 +47,11 @@ excel = BotExcelPlugin()
 # excel.add_row(['DATA ENTRADA', 'ENTRADA', 'DATA SAÍDA', 'SAÍDA', 'TRABALHADA', 'JUSTIFICADA', 'STATUS'])
 
 cpf = input('Digite o CPF (ex: 123.456.789-00): ')
-month_start = input('Digite o Mês de início(ex: 1, 2, 3, 10, 11...): ')
-month_end = input('Digite o Mês de final(ex: 1, 2, 3, 10, 11...): ')
-ano = input('Digite o Ano (ex: 2024): ')
+month_start = int(input('Digite o mês de inicial(ex: 01, 02, 10, 11...): '))
+year_start = int(input('Digite o ano inicial (ex: 2005): '))
+month_end = int(input('Digite o mês final(ex: 01, 02, 10, 11...): '))
+year_end = int(input('Digite o ano final (ex: 2005): '))
+# ano = input('Digite o Ano (ex: 2024): ')
 
 def main():
     maestro = BotMaestroSDK.from_sys_args()
@@ -79,18 +81,19 @@ def main():
     # busca o campo de login, clica nele e digita o login
     input_user = bot.find_element('//*[@id="cpf"]', By.XPATH)
     input_user.click()
-    input_user.send_keys('')
+    input_user.send_keys('06543548479')
 
     # Pressiona a tecla TAB
     input_user.send_keys(Keys.TAB)
 
     # No campo senha, digita a senha
     input_password = bot.find_element('//*[@id="senha"]', By.XPATH)
-    input_password.send_keys('')
+    input_password.send_keys('pgm2024')
 
     # Acessa o IFrame onde está o captcha, clica nele e depois sai do IFrame
     bot.enter_iframe(0)
     captcha = bot.find_element('//*[@id="recaptcha-anchor"]', By.XPATH)
+    # print(f'CAPTCHA: {captcha}')
     captcha.click()
     bot.leave_iframe()
 
@@ -101,82 +104,106 @@ def main():
     button_send = bot.find_element('//*[@id="form"]/input', By.XPATH)
     button_send.click()
 
-    # Pausa de 1 segundo
-    # bot.wait(1000)
+    global_array = []
+
+    for year in range(year_start, year_end + 1):
+        if year == year_start:
+            print(f'YEAR START: {year}')
+            for month in range(month_start, 13):
+                bot.navigate_to(
+                f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={year}')
+
+                data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
+                data = table_to_dict(data_table)
+        else:
+            print(f'YEAR END: {year}')
+            for month in range(1, month_end + 1):
+                bot.navigate_to(
+                    f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={year}')
+
+                data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
+                data = table_to_dict(data_table)
+
+        global_array.extend(data)
+
+        print(f'ARRAY: {global_array}')
+
+
+
 
     # Define uma variável que vai receber o nome registrado no ponto
-    str_name_employe = ''
+    # str_name_employe = ''
+    # arr_obj_ponto = []
+
+    # Adiciona uma linha ao arquivo do Excel criado, com mês e ano pesquisados
+    # excel.add_row([f'MÊS: {month_start} - ANO: {ano}'])
+
+    # Adiciona uma linha ao arquivo do Excel com o cabeçalho das colunas
+    # excel.add_row(
+    #     [
+    #         'DATA ENTRADA',
+    #         'ENTRADA',
+    #         'DATA SAÍDA',
+    #         'SAÍDA',
+    #         'TRABALHADA',
+    #         'JUSTIFICADA',
+    #         'STATUS'
+    #     ]
+    # )
 
     # Inicia um laço usando o intervalo dos meses informados
-    for month in range(int(month_start), int(month_end) + 1):
-
-        # Adiciona uma linha ao arquivo do Excel que seria criado com o mês e o ano pesquisados
-        excel.add_row([f'MÊS: 0{month} - ANO: {ano}'])
-
-        # Adiciona uma nova linha com o cabeçalho das colunas
-        excel.add_row(
-            [
-                'DATA ENTRADA',
-                'ENTRADA',
-                'DATA SAÍDA',
-                'SAÍDA',
-                'TRABALHADA',
-                'JUSTIFICADA',
-                'STATUS'
-            ]
-        )
-
-        # Pausa de 2 segundos
-        bot.wait(2000)
+    # for month in range(int(month_start), int(month_end) + 1):
 
         # Monta a URL com o CPF, Mês e Ano para acessar os dados do ponto para cada mês
-        bot.navigate_to(
-            f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={ano}')
+        # bot.navigate_to(
+            # f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={ano}')
 
         # acessa o elemento do DOM que tem o nome do servidor e atribui a variável str_name_employe
-        str_name_employe = bot.find_element(
-                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH)
+        # str_name_employe = bot.find_element(
+        #         '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH)
 
-        # Acessa a tabela com os dados do ponto e transforma num array de dicionários
-        data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
-        data = table_to_dict(data_table)
+        # Acessa a tabela e transforma os dados coletados num array de dicionários
+        # data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
+        # data = table_to_dict(data_table)
 
-        # Imprime os dados obtidos na tabela
-        print(data)
+        # Adiciona cumulativamente a cada iteração os dados do array "DATA" ao array ARR_OBJ_PONTO
+        # arr_obj_ponto.extend(data)
 
-        bot.wait(3000)
+    # Imprime os dados
+    # print(f'ARRAY: {arr_obj_ponto}')
 
-        # Faz um loop nos dados obtidos na tabela de ponto
-        for item in data:
-            # Acessa cada chave do dicionário montado anteriormente
-            str_data_entrada = item['data_entrada']
-            str_entrada = item['entrada']
-            str_data_saida = item['data_saída']
-            str_saida = item['saída']
-            str_trabalhada = item['trabalhada']
-            str_hora_justificada = item['hora_justificada']
-            str_status = item['status']
+    # Faz um loop no array
+    #     for item in data:
+    #         str_data_entrada: str = item.get('data_entrada')
+    #         str_entrada = item.get('entrada')
+    #         str_data_entrada: str = item.get('data_entrada')
+    #         str_saida = item.get('saída')
+    #         str_trabalhada = item.get('trabalhada')
+    #         str_hora_justificada = item.get('hora_justificada')
+    #         str_status = item.get('status')
 
-            print(str_data_entrada)
+            # Adciona nova linha no arquivo do Excel a cada interação com os dados
+            # excel.add_row(
+            #     [
+            #         str_data_entrada,
+            #         str_entrada,
+            #         # str_data_saida,
+            #         str_data_entrada,
+            #         str_saida,
+            #         str_trabalhada,
+            #         str_hora_justificada,
+            #         str_status
+            #     ]
+            # )
 
-            # Adciona nova linha no arquivo do Excel a cada interação com os dados obtidos no dicionário
-            excel.add_row(
-                [
-                    str_data_entrada,
-                    str_entrada,
-                    str_data_saida,
-                    str_saida,
-                    str_trabalhada,
-                    str_hora_justificada,
-                    str_status
-                ]
-            )
+        #Adciona nova linha em branco no arquivo do Excel
+        # excel.add_row([])
 
-        excel.add_row([])
-
+        # Adciona nova linha no arquivo do Excel com mês e ano
+        # excel.add_row([f'MÊS: {month} - ANO: {ano}'])
 
     # Cria o arquivo do Excel e salva no diretório com o nome do servidor + o ano da pesquisa
-    excel.write(fr'C:\Users\prmorais\Desktop\BOT\{str_name_employe.text}-{ano}.xlsx')
+    # excel.write(fr'C:\Users\paulo.morais\Desktop\BOT\{str_name_employe.text}_ANO_{ano}.xlsx')
 
     # Espera 3 secundos antes de fechar o browser
     bot.wait(3000)
