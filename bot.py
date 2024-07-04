@@ -41,6 +41,8 @@ from botcity.web.parsers import table_to_dict
 # Importa a dependencia do botcity.plugins.excel
 from botcity.plugins.excel import BotExcelPlugin
 
+from settings import Settings
+
 # Disable errors if we are not connected to Maestro
 BotMaestroSDK.RAISE_NOT_CONNECTED = False
 
@@ -80,14 +82,14 @@ def main():
     # busca o campo de login, clica nele e digita o login
     input_user = bot.find_element('//*[@id="cpf"]', By.XPATH)
     input_user.click()
-    input_user.send_keys('06543548479')
+    input_user.send_keys(Settings().USER_LOGIN)
 
     # Pressiona a tecla TAB
     input_user.send_keys(Keys.TAB)
 
     # No campo senha, digita a senha
     input_password = bot.find_element('//*[@id="senha"]', By.XPATH)
-    input_password.send_keys('pgm2024')
+    input_password.send_keys(Settings().USER_PASSWORD)
 
     # Acessa o IFrame onde está o captcha, clica nele e depois sai do IFrame
     bot.enter_iframe(0)
