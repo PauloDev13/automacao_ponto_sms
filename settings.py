@@ -8,3 +8,4 @@ class Settings(BaseSettings):
 
     USER_LOGIN: str
     USER_PASSWORD: str
+    PATH_EXCEL: str

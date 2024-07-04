@@ -55,7 +55,6 @@ year_start = int(input('Digite o ano inicial (ex: 2005): '))
 month_end = int(input('Digite o mês final(ex: 01, 02, 10, 11...): '))
 year_end = int(input('Digite o ano final (ex: 2005): '))
 
-# str_name_employe: WebElement = ''
 
 def main():
     maestro = BotMaestroSDK.from_sys_args()
@@ -94,7 +93,6 @@ def main():
     # Acessa o IFrame onde está o captcha, clica nele e depois sai do IFrame
     bot.enter_iframe(0)
     captcha = bot.find_element('//*[@id="recaptcha-anchor"]', By.XPATH)
-    # print(f'CAPTCHA: {captcha}')
     captcha.click()
     bot.leave_iframe()
 
@@ -105,40 +103,36 @@ def main():
     button_send = bot.find_element('//*[@id="form"]/input', By.XPATH)
     button_send.click()
 
-    # global_array = []
-    # str_name_employe = ''
-
-    # excel.add_row(
-    #     [
-    #         'DATA ENTRADA',
-    #         'ENTRADA',
-    #         'DATA SAÍDA',
-    #         'SAÍDA',
-    #         'TRABALHADA',
-    #         'JUSTIFICADA',
-    #         'STATUS'
-    #     ]
-    # )
+    str_name_employe = ''
 
     for year in range(year_start, year_end + 1):
-        if year == year_start:
+        if year_start == year_end:
             # Chama a função loop_for_data que lê os dados da tabela
-            loop_for_data(month_start, 13, year, bot)
+            loop_for_data(month_start, month_end + 1, year, bot)
 
             # Atribui a variável str_name_employe o valor contido no span (nome do servidor)
             str_name_employe = bot.find_element(
-                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH)
+                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH).text
+
+        elif year == year_start:
+            # Chama a função loop_for_data que lê os dados da tabela
+            loop_for_data(month_start, 13, year, bot)
 
         elif year < year_end:
             # Chama a função loop_for_data que lê os dados da tabela
             loop_for_data(1, 13, year, bot)
+
+            # Atribui a variável str_name_employe o valor contido no span (nome do servidor)
+            str_name_employe = bot.find_element(
+                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH).text
+
         else:
             # Chama a função loop_for_data que lê os dados da tabela
             loop_for_data(1, month_end + 1, year, bot)
 
     # Cria o arquivo do Excel e salva no diretório
     excel.write(
-        fr'C:\Users\prmorais\Desktop\BOT\{str_name_employe.text}_DE_{month_start}.{year_start}_A_{month_end}.{year_end}.xlsx')
+        fr'C:\Users\paulo.morais\Desktop\BOT\{str_name_employe}_DE_{month_start}.{year_start}_A_{month_end}.{year_end}.xlsx')
 
     # Espera 3 secundos antes de fechar o browser
     bot.wait(3000)
