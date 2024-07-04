@@ -47,16 +47,15 @@ from settings import Settings
 BotMaestroSDK.RAISE_NOT_CONNECTED = False
 
 excel = BotExcelPlugin()
-# excel.add_row(['DATA ENTRADA', 'ENTRADA', 'DATA SAÍDA', 'SAÍDA', 'TRABALHADA', 'JUSTIFICADA', 'STATUS'])
 
-cpf = input('Digite o CPF (ex: 123.456.789-00): ')
-month_start = int(input('Digite o mês de inicial(ex: 01, 02, 10, 11...): '))
-year_start = int(input('Digite o ano inicial (ex: 2005): '))
-month_end = int(input('Digite o mês final(ex: 01, 02, 10, 11...): '))
-year_end = int(input('Digite o ano final (ex: 2005): '))
+# cpf = input('Digite o CPF (ex: 123.456.789-00): ')
+# month_start = int(input('Digite o mês de inicial(ex: 01, 02, 10, 11...): '))
+# year_start = int(input('Digite o ano inicial (ex: 2005): '))
+# month_end = int(input('Digite o mês final(ex: 01, 02, 10, 11...): '))
+# year_end = int(input('Digite o ano final (ex: 2005): '))
 
 
-def main():
+def main(cpf, month_start, year_start, month_end, year_end):
     maestro = BotMaestroSDK.from_sys_args()
     execution = maestro.get_execution()
 
@@ -103,32 +102,22 @@ def main():
     button_send = bot.find_element('//*[@id="form"]/input', By.XPATH)
     button_send.click()
 
-    str_name_employe = ''
-
     for year in range(year_start, year_end + 1):
         if year_start == year_end:
             # Chama a função loop_for_data que lê os dados da tabela
-            loop_for_data(month_start, month_end + 1, year, bot)
-
-            # Atribui a variável str_name_employe o valor contido no span (nome do servidor)
-            str_name_employe = bot.find_element(
-                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH).text
+            loop_for_data(cpf, month_start, month_end + 1, year, bot)
 
         elif year == year_start:
             # Chama a função loop_for_data que lê os dados da tabela
-            loop_for_data(month_start, 13, year, bot)
+            loop_for_data(cpf, month_start, 13, year, bot)
 
         elif year < year_end:
             # Chama a função loop_for_data que lê os dados da tabela
-            loop_for_data(1, 13, year, bot)
-
-            # Atribui a variável str_name_employe o valor contido no span (nome do servidor)
-            str_name_employe = bot.find_element(
-                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH).text
+            loop_for_data(cpf,1, 13, year, bot)
 
         else:
             # Chama a função loop_for_data que lê os dados da tabela
-            loop_for_data(1, month_end + 1, year, bot)
+            loop_for_data(cpf, 1, month_end + 1, year, bot)
 
     # Cria o arquivo do Excel e salva no diretório
     excel.write(
@@ -154,11 +143,18 @@ def not_found(label):
     print(f"Element not found: {label}")
 
 
-def loop_for_data(month_1: int, month_2: int, year: int, bot:WebBot):
+def loop_for_data(cpf: str, month_1: int, month_2: int, year: int, bot:WebBot):
+
+    global str_name_employe
+
     for month in range(month_1, month_2):
         # Monta a URL com os query params CPF, Mês e Ano para acessar os dados
         bot.navigate_to(
             f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={year}')
+
+        # Atribui a variável str_name_employe o valor contido no span (nome do servidor)
+        str_name_employe = bot.find_element(
+            '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH).text
 
         # Acessa a tabela e transforma os dados coletados num array de dicionários
         data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)

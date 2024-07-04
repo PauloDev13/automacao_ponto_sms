@@ -3,6 +3,7 @@ botcity-maestro-sdk>=0.3.3,<1.0
 botcity-excel-plugin>=0.1.7
 webdriver-manager>=4.0.1
 pydantic-settings>=2.3.3
+streamlit>=1.36.0
 # Uncomment to use botcity-utils
 # botcity-utils>=0.1.2
 
