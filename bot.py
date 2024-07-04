@@ -27,6 +27,7 @@ from botcity.web import WebBot, Browser, By
 # Import for integration with BotCity Maestro SDK
 from botcity.maestro import *
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webelement import WebElement
 
 # Importa a dependencia do ChromeDriverManager do webdriver_manager
 from webdriver_manager.chrome import ChromeDriverManager
@@ -51,7 +52,8 @@ month_start = int(input('Digite o mês de inicial(ex: 01, 02, 10, 11...): '))
 year_start = int(input('Digite o ano inicial (ex: 2005): '))
 month_end = int(input('Digite o mês final(ex: 01, 02, 10, 11...): '))
 year_end = int(input('Digite o ano final (ex: 2005): '))
-# ano = input('Digite o Ano (ex: 2024): ')
+
+# str_name_employe: WebElement = ''
 
 def main():
     maestro = BotMaestroSDK.from_sys_args()
@@ -75,20 +77,17 @@ def main():
     # Acessa a URL do sistema de ponto.
     bot.browse('https://natal.rn.gov.br/sms/ponto/index.php')
 
-    # Pausa de 1 segundo
-    # bot.wait(1000)
-
     # busca o campo de login, clica nele e digita o login
     input_user = bot.find_element('//*[@id="cpf"]', By.XPATH)
     input_user.click()
-    input_user.send_keys('')
+    input_user.send_keys('06543548479')
 
     # Pressiona a tecla TAB
     input_user.send_keys(Keys.TAB)
 
     # No campo senha, digita a senha
     input_password = bot.find_element('//*[@id="senha"]', By.XPATH)
-    input_password.send_keys('')
+    input_password.send_keys('pgm2024')
 
     # Acessa o IFrame onde está o captcha, clica nele e depois sai do IFrame
     bot.enter_iframe(0)
@@ -104,41 +103,9 @@ def main():
     button_send = bot.find_element('//*[@id="form"]/input', By.XPATH)
     button_send.click()
 
-    global_array = []
-
-    for year in range(year_start, year_end + 1):
-        if year == year_start:
-            print(f'YEAR START: {year}')
-            for var_1 in range(month_start, 13):
-                bot.navigate_to(
-                f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={var_1}&ano={year}')
-
-                data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
-                data = table_to_dict(data_table)
-        else:
-            print(f'YEAR END: {year}')
-            for var_2 in range(1, month_end + 1):
-                bot.navigate_to(
-                    f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={var_2}&ano={year}')
-
-                data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
-                data = table_to_dict(data_table)
-
-        global_array.extend(data)
-
-        print(f'ARRAY: {global_array}')
-
-
-
-
-    # Define uma variável que vai receber o nome registrado no ponto
+    # global_array = []
     # str_name_employe = ''
-    # arr_obj_ponto = []
 
-    # Adiciona uma linha ao arquivo do Excel criado, com mês e ano pesquisados
-    # excel.add_row([f'MÊS: {month_start} - ANO: {ano}'])
-
-    # Adiciona uma linha ao arquivo do Excel com o cabeçalho das colunas
     # excel.add_row(
     #     [
     #         'DATA ENTRADA',
@@ -151,59 +118,25 @@ def main():
     #     ]
     # )
 
-    # Inicia um laço usando o intervalo dos meses informados
-    # for month in range(int(month_start), int(month_end) + 1):
+    for year in range(year_start, year_end + 1):
+        if year == year_start:
+            # Chama a função loop_for_data que lê os dados da tabela
+            loop_for_data(month_start, 13, year, bot)
 
-        # Monta a URL com o CPF, Mês e Ano para acessar os dados do ponto para cada mês
-        # bot.navigate_to(
-            # f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={ano}')
+            # Atribui a variável str_name_employe o valor contido no span (nome do servidor)
+            str_name_employe = bot.find_element(
+                '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH)
 
-        # acessa o elemento do DOM que tem o nome do servidor e atribui a variável str_name_employe
-        # str_name_employe = bot.find_element(
-        #         '/html/body/div[2]/div/div[2]/div[2]/div[4]/div/span/font[1]', By.XPATH)
+        elif year < year_end:
+            # Chama a função loop_for_data que lê os dados da tabela
+            loop_for_data(1, 13, year, bot)
+        else:
+            # Chama a função loop_for_data que lê os dados da tabela
+            loop_for_data(1, month_end + 1, year, bot)
 
-        # Acessa a tabela e transforma os dados coletados num array de dicionários
-        # data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
-        # data = table_to_dict(data_table)
-
-        # Adiciona cumulativamente a cada iteração os dados do array "DATA" ao array ARR_OBJ_PONTO
-        # arr_obj_ponto.extend(data)
-
-    # Imprime os dados
-    # print(f'ARRAY: {arr_obj_ponto}')
-
-    # Faz um loop no array
-    #     for item in data:
-    #         str_data_entrada: str = item.get('data_entrada')
-    #         str_entrada = item.get('entrada')
-    #         str_data_entrada: str = item.get('data_entrada')
-    #         str_saida = item.get('saída')
-    #         str_trabalhada = item.get('trabalhada')
-    #         str_hora_justificada = item.get('hora_justificada')
-    #         str_status = item.get('status')
-
-            # Adciona nova linha no arquivo do Excel a cada interação com os dados
-            # excel.add_row(
-            #     [
-            #         str_data_entrada,
-            #         str_entrada,
-            #         # str_data_saida,
-            #         str_data_entrada,
-            #         str_saida,
-            #         str_trabalhada,
-            #         str_hora_justificada,
-            #         str_status
-            #     ]
-            # )
-
-        #Adciona nova linha em branco no arquivo do Excel
-        # excel.add_row([])
-
-        # Adciona nova linha no arquivo do Excel com mês e ano
-        # excel.add_row([f'MÊS: {month} - ANO: {ano}'])
-
-    # Cria o arquivo do Excel e salva no diretório com o nome do servidor + o ano da pesquisa
-    # excel.write(fr'C:\Users\paulo.morais\Desktop\BOT\{str_name_employe.text}_ANO_{ano}.xlsx')
+    # Cria o arquivo do Excel e salva no diretório
+    excel.write(
+        fr'C:\Users\prmorais\Desktop\BOT\{str_name_employe.text}_DE_{month_start}.{year_start}_A_{month_end}.{year_end}.xlsx')
 
     # Espera 3 secundos antes de fechar o browser
     bot.wait(3000)
@@ -221,10 +154,64 @@ def main():
     #     message="Task Finished OK."
     # )
 
-
 def not_found(label):
     print(f"Element not found: {label}")
 
+
+def loop_for_data(month_1: int, month_2: int, year: int, bot:WebBot):
+    for month in range(month_1, month_2):
+        # Monta a URL com os query params CPF, Mês e Ano para acessar os dados
+        bot.navigate_to(
+            f'https://natal.rn.gov.br/sms/ponto/interno/aprova_justificativa/detalhes.php?cpf={cpf}&mes={month}&ano={year}')
+
+        # Acessa a tabela e transforma os dados coletados num array de dicionários
+        data_table = bot.find_element('//*[@id="mesatual"]/table', By.XPATH)
+        data = table_to_dict(data_table)
+
+        # Adciona linhas de cabeçalho em cada mês no arquivo do Excel
+        excel.add_row('*****************************************************************')
+        excel.add_row(f'MÊS: {month} - ANO: {year}')
+        excel.add_row('*****************************************************************')
+        excel.add_row(
+            [
+                'DATA ENTRADA',
+                'ENTRADA',
+                'DATA SAÍDA',
+                'SAÍDA',
+                'TRABALHADA',
+                'JUSTIFICADA',
+                'STATUS'
+            ]
+        )
+
+        # Chama a função add_data_rows_excel que adiciona os dados no arquivo Excel
+        add_data_rows_excel(data)
+
+
+def add_data_rows_excel(data):
+    # Atribui às variáveis os valores do array com dicionário data
+    for item in data:
+        str_data_entrada: str = item.get('data_entrada')
+        str_entrada = item.get('entrada')
+        str_data_entrada: str = item.get('data_entrada')
+        str_saida = item.get('saída')
+        str_trabalhada = item.get('trabalhada')
+        str_hora_justificada = item.get('hora_justificada')
+        str_status = item.get('status')
+
+        # Adciona nova linha no arquivo do Excel a cada interação com os dados
+        excel.add_row(
+            [
+                str_data_entrada,
+                str_entrada,
+                # str_data_saida,
+                str_data_entrada,
+                str_saida,
+                str_trabalhada,
+                str_hora_justificada,
+                str_status
+            ]
+        )
 
 if __name__ == '__main__':
     main()
